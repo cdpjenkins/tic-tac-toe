@@ -14,21 +14,21 @@
 
 
 (def blank-board
-  [\- \- \-
-   \- \- \-
-   \- \- \-])
+  [:e :e :e
+   :e :e :e
+   :e :e :e])
 
 (def board (atom blank-board))
 
 (def test-board1
-  [\- \- \-
-   \- \o \-
-   \- \- \-])
+  [:e :e :e
+   :e :o :e
+   :e :e :e])
 
 (def board-x-wins
-  [\x \- \o
-   \- \x \o
-   \- \- \x])
+  [:x :e :o
+   :e :x :o
+   :e :e :x])
 
 (def board-o-wins
   [:x :e :o
@@ -36,9 +36,9 @@
    :e :e :o])
 
 (def board-draw
-  [\x \o \o
-   \o \x \x
-   \x \o \o])
+  [:x :o :o
+   :o :x :x
+   :x :o :o])
 
 (def poses (range 9))
 
@@ -89,15 +89,16 @@
   (some (fn [partition] (every? #(= player %) partition)) partitions))
 
 (defn winner
-  "Return one of x, o, nil, :draw"
+  "Return one of :x, :o, nil, :draw"
   ([board]
      (let [partitions (winning-partitions board)]
        (cond
-        (player-has-won \x partitions) \x
-        (player-has-won \o partitions) \o
+        (player-has-won :x partitions) :x
+        (player-has-won :o partitions) :o
         (empty? (available-squares board)) :draw
         :else nil))))
 
+;(winner blank-board)
 
 
 ;;0 1 2
