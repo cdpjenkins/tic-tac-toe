@@ -6,8 +6,10 @@
             [compojure.handler :as handler]
             [hiccup.core :as hiccup]
             [hiccup.form :as form]
+            [hiccup.element :as element]
 ))
 
+(def picture-map {:e "empty.png" :x "cross.png" :o "nought.png"})
 
 
 
@@ -29,9 +31,9 @@
    \- \- \x])
 
 (def board-o-wins
-  [\x \- \o
-   \- \x \o
-   \- \- \o])
+  [:x :e :o
+   :e :x :o
+   :e :e :o])
 
 (def board-draw
   [\x \o \o
@@ -53,11 +55,12 @@
 
 (defn get-board [board]
   (let [rows (partition 3 board)]
-    (hiccup/html [:table
+    (hiccup/html [:center
+                  [:table {:border "1px solid black"}
                   (for [row rows]
                     [:tr (for [cell row]
-                       [:td cell ])])]
-                 (form/form-to [:post "/post"] (form/submit-button "asdf" )))))
+                       [:td (element/image (cell picture-map))])])]
+                 (form/form-to [:post "/post"] (form/submit-button "asdf" ))])))
 
 
 (defn zip [rest]
@@ -107,7 +110,7 @@
 (defroutes app-routes
   (GET "/" [] (get-board board-o-wins))
   (POST "/post" [] (get-board board-draw ))
-
+  (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
 (def app
