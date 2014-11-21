@@ -1,5 +1,14 @@
 (ns tic-tac-toe.core
-  (:gen-class))
+  (:gen-class)
+  (:use  [ring.adapter.jetty :only [run-jetty]])
+  (:require [compojure.core :refer :all]
+            [compojure.route :as route]
+            [compojure.handler :as handler]
+            [hiccup.core :as hiccup]
+            [hiccup.form :as form]
+))
+
+
 
 
 (def blank-board
@@ -41,6 +50,16 @@
   (doseq [row (partition 3 board)]
     (println (apply str row))))
 
+
+(defn get-board [board]
+  (let [rows (partition 3 board)]
+    (hiccup/html [:table
+                  (for [row rows]
+                    [:tr (for [cell row]
+                       [:td cell ])])]
+                 (form/form-to [:post "/post"] (form/submit-button "asdf" )))))
+
+
 (defn zip [rest]
   (apply map vector rest))
 
@@ -55,7 +74,7 @@
                         (apply concat))]]
     (concat rows cols diagonals)))
 
-;; 
+;;
 ;; (apply concat (partition 1 4 (apply concat (map reverse (partition 3 (range 9))))))
 
 (defn possible-moves [board player]
@@ -77,6 +96,34 @@
         :else nil))))
 
 
+
 ;;0 1 2
 ;;3 4 5
 ;;6 7 8
+
+
+
+
+(defroutes app-routes
+  (GET "/" [] (get-board board-o-wins))
+  (POST "/post" [] (get-board board-draw ))
+
+  (route/not-found "<h1>Page not found</h1>"))
+
+(def app
+  (-> app-routes
+      (handler/site)))
+
+(defn make-server
+  ([]
+     (make-server 8000))
+  ([port]
+     (let [port port]
+       (run-jetty (var app) {:port port :join? false}))))
+
+(defn -main
+  ([]
+     (make-server 8000))
+  ([port]
+     (make-server (Integer/parseInt port))))
+
