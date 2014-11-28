@@ -100,19 +100,28 @@
 
 
 
+(def toggle
+  (let [piece (atom :o)
+        toggle-fn (fn [piece]
+                    (if (= piece :o)
+                      :x
+                      :o))]
+    (fn [] (swap! piece toggle-fn))))
+
 ;;
 ;; Web stuff below this point!
 ;;
 
 (defn get-board [board]
-  (let [rows (partition 3 board)]
+  (let [rows (partition 3 board)
+        piece (toggle)]
     (hiccup/html [:center
                   [:table {:border "1px solid black"}
                    (for [[row-number row] (map-indexed vector rows)]
                      [:tr
                       (for [[column-number cell] (map-indexed vector row)]
                        [:td 
-                        [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) )}
+                        [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) "/" (name piece) )}
                          (element/image (cell picture-map))]])])]
                  (form/form-to [:post "/post"] (form/submit-button "asdf" ))])))
 
@@ -122,9 +131,10 @@
 
 (defroutes app-routes
   (GET "/" [] (get-board-atom))
-  (GET "/place-piece/:pos" [pos] (do
-                                   (swap! board place-piece :x (Integer/parseInt pos))
-                                   (resp/redirect "/")))
+  (GET "/place-piece/:pos/:piece" [pos piece]
+       (do
+         (swap! board place-piece (keyword piece) (Integer/parseInt pos))
+         (resp/redirect "/")))
   (POST "/post" [] (get-board board-draw ))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
