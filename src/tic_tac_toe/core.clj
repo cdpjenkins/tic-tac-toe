@@ -7,6 +7,7 @@
             [hiccup.core :as hiccup]
             [hiccup.form :as form]
             [hiccup.element :as element]
+            [ring.util.response :as resp]
 ))
 
 (def picture-map {:e "empty.png" :x "cross.png" :o "nought.png"})
@@ -53,14 +54,6 @@
     (println (apply str row))))
 
 
-(defn get-board [board]
-  (let [rows (partition 3 board)]
-    (hiccup/html [:center
-                  [:table {:border "1px solid black"}
-                  (for [row rows]
-                    [:tr (for [cell row]
-                       [:td (element/image (cell picture-map))])])]
-                 (form/form-to [:post "/post"] (form/submit-button "asdf" ))])))
 
 
 (defn zip [rest]
@@ -107,9 +100,31 @@
 
 
 
+;;
+;; Web stuff below this point!
+;;
+
+(defn get-board [board]
+  (let [rows (partition 3 board)]
+    (hiccup/html [:center
+                  [:table {:border "1px solid black"}
+                   (for [[row-number row] (map-indexed vector rows)]
+                     [:tr
+                      (for [[column-number cell] (map-indexed vector row)]
+                       [:td 
+                        [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) )}
+                         (element/image (cell picture-map))]])])]
+                 (form/form-to [:post "/post"] (form/submit-button "asdf" ))])))
+
+(defn get-board-atom []
+  (get-board @board))
+
 
 (defroutes app-routes
-  (GET "/" [] (get-board board-o-wins))
+  (GET "/" [] (get-board-atom))
+  (GET "/place-piece/:pos" [pos] (do
+                                   (swap! board place-piece :x (Integer/parseInt pos))
+                                   (resp/redirect "/")))
   (POST "/post" [] (get-board board-draw ))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
@@ -131,3 +146,9 @@
   ([port]
      (make-server (Integer/parseInt port))))
 
+(comment
+  (def server (make-server))
+  (.stop server)
+  (swap! board place-piece :x 0)
+  (swap! board place-piece :o 4)
+)
