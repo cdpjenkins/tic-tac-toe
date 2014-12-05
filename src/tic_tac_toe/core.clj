@@ -47,7 +47,7 @@
   (assoc board pos piece))
 
 (defn available-squares [board]
-  (filter #(= \- (board %)) poses))
+  (filter #(= :e (board %)) poses))
 
 (defn print-board [board]
   (doseq [row (partition 3 board)]
@@ -81,15 +81,15 @@
 (defn player-has-won [player partitions]
   (some (fn [partition] (every? #(= player %) partition)) partitions))
 
-(defn winner
-  "Return one of :x, :o, nil, :draw"
+(defn get-game-state
+  "Return one of :x, :o, :ongoing, :draw"
   ([board]
      (let [partitions (winning-partitions board)]
        (cond
         (player-has-won :x partitions) :x
         (player-has-won :o partitions) :o
         (empty? (available-squares board)) :draw
-        :else nil))))
+        :else :ongoing))))
 
 ;(winner blank-board)
 
@@ -114,16 +114,23 @@
 
 (defn get-board [board]
   (let [rows (partition 3 board)
-        piece (toggle)]
+        piece (toggle)
+        game-state (get-game-state board)]
     (hiccup/html [:center
                   [:table {:border "1px solid black"}
                    (for [[row-number row] (map-indexed vector rows)]
                      [:tr
                       (for [[column-number cell] (map-indexed vector row)]
-                       [:td 
-                        [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) "/" (name piece) )}
-                         (element/image (cell picture-map))]])])]
-                 (form/form-to [:post "/post"] (form/submit-button "asdf" ))])))
+                       [:td
+                        (if (and (= :e cell) (= :ongoing game-state) )
+                           [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) "/" (name piece) )}
+                             (element/image (cell picture-map))]
+                          (element/image (cell picture-map))
+                          )
+
+                        ])])]
+                 (form/form-to [:post "/post"] (form/submit-button "new game" ))
+                  [:h1 "game state: " (name game-state)]])))
 
 (defn get-board-atom []
   (get-board @board))
@@ -135,7 +142,9 @@
        (do
          (swap! board place-piece (keyword piece) (Integer/parseInt pos))
          (resp/redirect "/")))
-  (POST "/post" [] (get-board board-draw ))
+  (POST "/post" [] (do
+                     (reset! board blank-board)
+                     (resp/redirect "/")))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
