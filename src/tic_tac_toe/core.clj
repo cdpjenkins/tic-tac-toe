@@ -114,7 +114,8 @@
 
 (defn get-board [board]
   (let [rows (partition 3 board)
-        piece (toggle)
+        ;;piece (toggle)
+        piece :x
         game-state (get-game-state board)]
     (hiccup/html [:center
                   [:table {:border "1px solid black"}
@@ -141,6 +142,8 @@
   (GET "/place-piece/:pos/:piece" [pos piece]
        (do
          (swap! board place-piece (keyword piece) (Integer/parseInt pos))
+         (when (= :ongoing (get-game-state @board))
+           (swap! board place-piece :o (rand-nth (available-squares @board ))))
          (resp/redirect "/")))
   (POST "/post" [] (do
                      (reset! board blank-board)
