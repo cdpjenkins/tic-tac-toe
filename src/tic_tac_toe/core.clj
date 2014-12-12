@@ -37,9 +37,9 @@
    :e :e :o])
 
 (def board-draw
-  [:x :o :o
-   :o :x :x
-   :x :o :o])
+  [:o :e :e
+   :e :o :o
+   :o :e :e])
 
 (def poses (range 9))
 
@@ -107,6 +107,17 @@
                       :x
                       :o))]
     (fn [] (swap! piece toggle-fn))))
+
+
+(defn get-next-move [board]
+  (filter #(= :o (get-game-state % ))
+    (for [pos-move (available-squares board)]
+      (place-piece board :o pos-move))))
+
+
+
+(get-next-move board-draw)
+
 
 ;;
 ;; Web stuff below this point!
