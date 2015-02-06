@@ -8,6 +8,8 @@
             [hiccup.form :as form]
             [hiccup.element :as element]
             [ring.util.response :as resp]
+            [ring.middleware.session :as session ]
+            [ring.util.response :as response]
 ))
 
 (def picture-map {:e "empty.png" :x "cross.png" :o "nought.png"})
@@ -149,7 +151,13 @@
 
 
 (defroutes app-routes
-  (GET "/" [] (get-board-atom))
+  (GET "/" {session :session} ;(get-board-atom)
+       (let [board (if (contains? session :board)
+                      (:board session)
+                      blank-board)]
+         (assoc (response/response (get-board board)) :session (assoc session :board board))))
+  (GET "/dump-session" {session :session} {:body (str "waaaaaa " session)
+                                           :session (assoc session :1 1)})
   (GET "/place-piece/:pos/:piece" [pos piece]
        (do
          (swap! board place-piece (keyword piece) (Integer/parseInt pos))
@@ -164,7 +172,8 @@
 
 (def app
   (-> app-routes
-      (handler/site)))
+      (handler/site)
+      (session/wrap-session)))
 
 (defn make-server
   ([]
