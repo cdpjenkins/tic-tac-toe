@@ -157,19 +157,25 @@
                       blank-board)]
          (response/content-type
           (assoc (response/response (get-board board))
-            :session (assoc session :board board)) "text/html" )))
+            :session (assoc session :board board))
+          "text/html" )))
   (GET "/dump-session" {session :session} {:body (str "waaaaaa " session)
                                            :session (assoc session :1 1)})
-  (GET "/place-piece/:pos/:piece" [pos piece]
-       (do
-         (swap! board place-piece (keyword piece) (Integer/parseInt pos))
-         (when (= :ongoing (get-game-state @board))
-           (swap! board place-piece :o (rand-nth (available-squares @board ))))
+  (GET "/place-piece/:pos/:piece"  {{pos :pos piece :piece} :params
+                                     session :session}
 
-         (let [players-turn  (place-piece (keyword piece) (Integer/parseInt pos))
-               computer-turn (place-piece :o (rand-nth (available-squares players-turn)))]
+         (let [players-turn  (place-piece (:board session) (keyword piece) (Integer/parseInt pos))
+               computer-turn (place-piece players-turn :o (rand-nth (available-squares players-turn)))
+               ]
 
-         (resp/redirect "/")))
+           (response/content-type
+            (assoc (response/response (get-board computer-turn))
+                                      :session (assoc session :board computer-turn))
+            "text/html")))
+
+
+  (GET "/clear" {session :session}
+       (assoc (response/response (str "" )) :session (assoc session :board blank-board)))
   (POST "/post" [] (do
                      (reset! board blank-board)
                      (resp/redirect "/")))
