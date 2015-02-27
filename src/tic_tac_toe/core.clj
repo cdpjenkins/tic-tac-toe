@@ -9,54 +9,14 @@
             [hiccup.element :as element]
             [ring.util.response :as resp]
             [ring.middleware.session :as session ]
-            [ring.util.response :as response]
-))
+            [ring.util.response :as response]))
 
 (def picture-map {:e "/empty.png" :x "/cross.png" :o "/nought.png"})
-
-
 
 (def blank-board
   [:e :e :e
    :e :e :e
    :e :e :e])
-
-(def board (atom blank-board))
-
-(def test-board1
-  [:e :e :e
-   :e :o :e
-   :e :e :e])
-
-(def board-x-wins
-  [:x :e :o
-   :e :x :o
-   :e :e :x])
-
-(def board-o-wins
-  [:x :e :o
-   :e :x :o
-   :e :e :o])
-
-(def board-draw
-  [:o :e :e
-   :e :o :o
-   :o :e :e])
-
-(def poses (range 9))
-
-(defn place-piece [board piece pos]
-  (assoc board pos piece))
-
-(defn available-squares [board]
-  (filter #(= :e (board %)) poses))
-
-(defn print-board [board]
-  (doseq [row (partition 3 board)]
-    (println (apply str row))))
-
-
-
 
 (defn zip [rest]
   (apply map vector rest))
@@ -72,14 +32,6 @@
                         (apply concat))]]
     (concat rows cols diagonals)))
 
-;;
-;; (apply concat (partition 1 4 (apply concat (map reverse (partition 3 (range 9))))))
-
-(defn possible-moves [board player]
-  (doseq [pos (available-squares board)]
-    (println)
-    (print-board (place-piece board player pos))))
-
 (defn player-has-won [player partitions]
   (some (fn [partition] (every? #(= player %) partition)) partitions))
 
@@ -93,42 +45,12 @@
         (empty? (available-squares board)) :draw
         :else :ongoing))))
 
-;(winner blank-board)
-
-
-;;0 1 2
-;;3 4 5
-;;6 7 8
-
-
-
-(def toggle
-  (let [piece (atom :o)
-        toggle-fn (fn [piece]
-                    (if (= piece :o)
-                      :x
-                      :o))]
-    (fn [] (swap! piece toggle-fn))))
-
-
-(defn get-next-move [board]
-  (filter #(= :o (get-game-state % ))
-    (for [pos-move (available-squares board)]
-      (place-piece board :o pos-move))))
-
-
-
-(get-next-move board-draw)
-
-
 ;;
 ;; Web stuff below this point!
 ;;
 
 (defn get-board [board]
   (let [rows (partition 3 board)
-        ;;piece (toggle)
-        piece :x
         game-state (get-game-state board)]
     (hiccup/html [:center
                   [:table {:border "1px solid black"}
@@ -137,7 +59,7 @@
                       (for [[column-number cell] (map-indexed vector row)]
                        [:td
                         (if (and (= :e cell) (= :ongoing game-state) )
-                           [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) "/" (name piece) )}
+                           [:a {:href (str "/place-piece/" (+  column-number (* row-number 3)) "/x")}
                              (element/image (cell picture-map))]
                           (element/image (cell picture-map))
                           )
@@ -145,9 +67,6 @@
                         ])])]
                  (form/form-to [:post "/post"] (form/submit-button "new game" ))
                   [:h1 "game state: " (name game-state)]])))
-
-(defn get-board-atom []
-  (get-board @board))
 
 (defn get-response [board session]
   (response/content-type
@@ -165,8 +84,6 @@
           (assoc (response/response (get-board board))
             :session (assoc session :board board))
           "text/html" )))
-  (GET "/dump-session" {session :session} {:body (str "waaaaaa " session)
-                                           :session (assoc session :1 1)})
   (GET "/place-piece/:pos/:piece"  {{pos :pos piece :piece} :params
                                      session :session}
 
@@ -174,20 +91,10 @@
            (if (or (= :x (get-game-state players-turn)) (= :draw (get-game-state players-turn)))
              ( get-response players-turn session)
              (let [ computer-turn (place-piece players-turn :o (rand-nth (available-squares players-turn)))]
-               (get-response computer-turn session) )
-
-           )))
-
-
-  (GET "/clear" {session :session}
-       (assoc (response/response (str "" )) :session (assoc session :board blank-board)))
+               (get-response computer-turn session)))))
   (POST "/post"  {session :session}
-
           (assoc (response/redirect-after-post "/")
             :session (assoc session :board blank-board)))
-
-
-
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
@@ -208,10 +115,3 @@
      (make-server 8000))
   ([port]
      (make-server (Integer/parseInt port))))
-
-(comment
-  (def server (make-server))
-  (.stop server)
-  (swap! board place-piece :x 0)
-  (swap! board place-piece :o 4)
-)
