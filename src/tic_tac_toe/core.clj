@@ -12,7 +12,7 @@
             [ring.util.response :as response]
 ))
 
-(def picture-map {:e "empty.png" :x "cross.png" :o "nought.png"})
+(def picture-map {:e "/empty.png" :x "/cross.png" :o "/nought.png"})
 
 
 
@@ -149,6 +149,12 @@
 (defn get-board-atom []
   (get-board @board))
 
+(defn get-response [board session]
+  (response/content-type
+            (assoc (response/response (get-board board))
+                                      :session (assoc session :board board))
+            "text/html"))
+
 
 (defroutes app-routes
   (GET "/" {session :session} ;(get-board-atom)
@@ -164,21 +170,24 @@
   (GET "/place-piece/:pos/:piece"  {{pos :pos piece :piece} :params
                                      session :session}
 
-         (let [players-turn  (place-piece (:board session) (keyword piece) (Integer/parseInt pos))
-               computer-turn (place-piece players-turn :o (rand-nth (available-squares players-turn)))
-               ]
+         (let [players-turn  (place-piece (:board session) (keyword piece) (Integer/parseInt pos))]
+           (if (or (= :x (get-game-state players-turn)) (= :draw (get-game-state players-turn)))
+             ( get-response players-turn session)
+             (let [ computer-turn (place-piece players-turn :o (rand-nth (available-squares players-turn)))]
+               (get-response computer-turn session) )
 
-           (response/content-type
-            (assoc (response/response (get-board computer-turn))
-                                      :session (assoc session :board computer-turn))
-            "text/html")))
+           )))
 
 
   (GET "/clear" {session :session}
        (assoc (response/response (str "" )) :session (assoc session :board blank-board)))
-  (POST "/post" [] (do
-                     (reset! board blank-board)
-                     (resp/redirect "/")))
+  (POST "/post"  {session :session}
+
+          (assoc (response/redirect-after-post "/")
+            :session (assoc session :board blank-board)))
+
+
+
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
