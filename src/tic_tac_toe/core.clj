@@ -53,6 +53,25 @@
         (empty? (available-squares board)) :draw
         :else :ongoing))))
 
+;; who is the opposite player?
+(defn other-player [who]
+  (if (= who :x) :o :x))
+
+(defn score-board [board who]
+  (condp = (get-game-state board)
+    who 100
+    (other-player who) -100
+    :draw 0
+    :ongoing 1))
+
+(defn score-move [board who place]
+  (let [new-board (place-piece board who place)
+        score (score-board new-board who)]
+  [place score]))
+
+(defn choose-move [board who]
+  [2 100])
+
 ;;
 ;; Web stuff below this point!
 ;;
