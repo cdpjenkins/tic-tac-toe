@@ -18,8 +18,16 @@
    :e :e :e
    :e :e :e])
 
+(def poses (range 9))
+
+(defn available-squares [board]
+  (filter #(= :e (board %)) poses))
+
 (defn zip [rest]
   (apply map vector rest))
+
+(defn place-piece [board piece pos]
+  (assoc board pos piece))
 
 (defn winning-partitions [board]
   (let [rows (partition 3 board)
