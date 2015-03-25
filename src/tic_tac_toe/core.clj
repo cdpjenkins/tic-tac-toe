@@ -18,6 +18,11 @@
    :e :e :e
    :e :e :e])
 
+;(def winning-board
+;  [:x :x :o
+;   :e :x :e
+;   :o :o :e])
+
 (def poses (range 9))
 
 (defn available-squares [board]
@@ -57,20 +62,39 @@
 (defn other-player [who]
   (if (= who :x) :o :x))
 
+(declare choose-move)
+
 (defn score-board [board who]
   (condp = (get-game-state board)
     who 100
     (other-player who) -100
     :draw 0
-    :ongoing 1))
+    :ongoing (let [other-players-move (choose-move board (other-player who))
+                   score (second other-players-move)]
+                  (* -1 score))))
 
 (defn score-move [board who place]
   (let [new-board (place-piece board who place)
         score (score-board new-board who)]
   [place score]))
 
+
 (defn choose-move [board who]
-  [2 100])
+  (let [open-spaces (available-squares board)
+        weighted-moves          (map #(score-move board who %)  open-spaces)
+        best-move (first (sort-by second > weighted-moves))  ]
+  ; (println weighted-moves)
+   best-move))
+
+
+
+;(choose-move winning-board :x)
+
+(defn choose-really-good-move [board who]
+  (let [best-score (choose-move board who)]
+         (if-let [score (= 100 (second best-score))]
+            (first best-score)
+            (first (choose-move board (other-player who))))))
 
 ;;
 ;; Web stuff below this point!
@@ -117,7 +141,7 @@
          (let [players-turn  (place-piece (:board session) (keyword piece) (Integer/parseInt pos))]
            (if (or (= :x (get-game-state players-turn)) (= :draw (get-game-state players-turn)))
              ( get-response players-turn session)
-             (let [ computer-turn (place-piece players-turn :o (rand-nth (available-squares players-turn)))]
+             (let [ computer-turn (place-piece players-turn :o (first (choose-move players-turn :o)))]
                (get-response computer-turn session)))))
   (POST "/post"  {session :session}
           (assoc (response/redirect-after-post "/")
