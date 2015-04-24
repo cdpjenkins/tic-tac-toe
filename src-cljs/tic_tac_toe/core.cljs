@@ -15,23 +15,47 @@
 (defn new-game []
   (reset! game-state game/blank-board))
 
+(defn update-dom [board]
+  (doseq [i (range 9)]
+    (let [value (board i)
+          node (d/by-id (str i))]
+      (d/set-attr! node :src (value picture-map))
+      (d/set-text! (d/by-id "game-state") (str "Game state: " (game/get-game-state board))))))
+
+(defn make-move [board pos]
+  (let [piece :x
+        players-turn  (game/place-piece board piece pos)
+        state (game/get-game-state players-turn)]
+    ;(println state)
+           (if (or (= :x state)
+                   (= :draw state))
+             players-turn
+             (let [computer-turn (game/place-piece players-turn :o
+                                                   (first (game/choose-move players-turn :o)))]
+               computer-turn))))
 
 (defn init []
-  ;(println "hello from clojureScript!!")
-  ;(d/append! (x/xpath "//body") "<div>Hello world!</div>")
+  (new-game)
   (d/append! (d/by-id "board") (h/html [:center
                   [:table {:border "1px solid black"}
                    (for [row-number (range 3)]
                      [:tr
                       (for [column-number (range 3)]
                        [:td
-                          [:div {:id (str (+ (* 3 row-number) column-number)) } [:img {:src (:e picture-map)}]]
-
+                          [:div [:img {:id (str (+ (* 3 row-number) column-number))
+                                       :src (:e picture-map)}]]
                         ])])]
-                  [:h1 "game state: " ]]  ))
+                  [:h1 {:id "game-state"} "Game state: " (game/get-game-state @game-state)]]))
 
-  (doseq [i (range 9)] (ev/listen! (d/by-id (str i )) :click (fn [evt] (println "button clicked!" i))))
-
-  )
+  (doseq [i (range 9)]
+    (ev/listen!
+     (d/by-id (str i ))
+     :click
+     (fn [evt] (println "button clicked!" i)
+          (when (and (= :e (get @game-state i))
+                    (= :ongoing (game/get-game-state @game-state)))
+           (swap! game-state make-move i)
+           (println @game-state (game/get-game-state @game-state))
+           (update-dom @game-state))))))
 
 (set! (.-onload js/window) init)

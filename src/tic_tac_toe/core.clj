@@ -56,8 +56,8 @@
 (defroutes app-routes
   (GET "/" {session :session} ;(get-board-atom)
        (let [board (if (contains? session :board)
-                      (:board session)
-                      blank-board)]
+                       (:board session)
+                       blank-board)]
          (response/content-type
           (assoc (response/response (get-board board))
             :session (assoc session :board board))
