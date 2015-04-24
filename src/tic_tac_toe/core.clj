@@ -24,7 +24,7 @@
    (hiccup/html [:head
                  [:title "tic-tac-toe"]
                  (page/include-js "/js/cljs.js")]
-               [:body "this is a test"
+               [:body
                 [:div {:id "board"}]]))
 
 (defn get-board [board]

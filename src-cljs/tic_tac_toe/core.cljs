@@ -2,7 +2,8 @@
   (:require [domina :as d]
             [domina.xpath :as x ]
             [domina.events :as ev]
-            [hiccups.runtime :as hiccupsrt])
+            [hiccups.runtime :as hiccupsrt]
+            [tic-tac-toe.game :as game])
   (:require-macros [hiccups.core :as h]))
 
 (enable-console-print!)
@@ -11,9 +12,13 @@
 
 (def game-state (atom []))
 
+(defn new-game []
+  (reset! game-state game/blank-board))
+
+
 (defn init []
-  (println "hello from clojureScript!!")
-  (d/append! (x/xpath "//body") "<div>Hello world!</div>")
+  ;(println "hello from clojureScript!!")
+  ;(d/append! (x/xpath "//body") "<div>Hello world!</div>")
   (d/append! (d/by-id "board") (h/html [:center
                   [:table {:border "1px solid black"}
                    (for [row-number (range 3)]
