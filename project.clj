@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/core.typed "0.2.92"]
                  [compojure "1.2.1"]
                  [hiccup "1.0.5"]
                  [ring/ring-jetty-adapter "1.1.0"]
@@ -25,7 +26,7 @@
                 {:source-paths ["src-cljx"]
                  :output-path "src-cljs"
                  :rules :cljs}]}
-
+ :core.typed {:check [tic-tac-toe.test]}
 
   :target-path "target/%s"
 

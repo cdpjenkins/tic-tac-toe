@@ -12,6 +12,7 @@
 
 (def poses (range 9))
 
+
 (defn available-squares [board]
   (filter #(= :e (board %)) poses))
 
@@ -22,6 +23,7 @@
   (assoc board pos piece))
 
 (defn winning-partitions [board]
+ ;(println board)
   (let [rows (partition 3 board)
         cols (zip rows)
         diagonals [(apply concat (partition 1 4 board))
@@ -73,6 +75,7 @@
   ; (println weighted-moves)
    best-move))
 
+(def choose-move (memoize choose-move))
 
 
 ;(choose-move winning-board :x)
@@ -82,3 +85,11 @@
          (if-let [score (= 100 (second best-score))]
             (first best-score)
             (first (choose-move board (other-player who))))))
+
+(def upgraded-rgm (memoize choose-really-good-move))
+
+
+(comment
+  (clojure.core.typed/check-ns )
+
+  )
