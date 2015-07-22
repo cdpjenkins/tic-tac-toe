@@ -1,36 +1,14 @@
 # tic-tac-toe
 
-FIXME: description
-
-## Installation
-
-Download from http://example.com/FIXME.
+This is a sample demonstrating a simple minimax AI for playing Tic Tac Toe (eke Noughts And Crosses). It uses cljx to expose both a Clojure implementation (that lives on the server) and a ClojureScript implementation (that runs on the client).
 
 ## Usage
 
-FIXME: explanation
+    lein ring server
 
-    $ java -jar tic-tac-toe-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014, 2015 IBM
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Apache v2 license.
